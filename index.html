@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدير المهام الاحترافي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f8fafc;
+        }
+        .task-completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+            background-color: #f1f5f9 !important;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: white;
+            }
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+            th, td {
+                border: 1px solid #000 !important;
+                padding: 8px;
+                text-align: right;
+            }
+            .container {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        }
+        /* مظهر الجدول مع الخطوط */
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden container">
+        
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-white flex justify-between items-center no-print">
+            <div>
+                <h1 class="text-2xl font-bold">مدير المهام الذكي</h1>
+                <p class="text-blue-100 text-sm">نظم وقتك وموادك بكفاءة - بياناتك محفوظة تلقائياً</p>
+            </div>
+            <button onclick="window.print()" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-50 transition flex items-center gap-2">
+                <span>طباعة الجدول</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Form Section -->
+        <div class="p-6 border-b no-print">
+            <h2 class="text-lg font-bold mb-4 text-gray-700">إضافة مهمة جديدة</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">المادة</label>
+                    <input type="text" id="subject" placeholder="اسم المادة أو المشروع" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm text-gray-600 mb-1">الوصف</label>
+                    <input type="text" id="description" placeholder="تفاصيل المهمة..." class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">تاريخ البدء</label>
+                    <input type="datetime-local" id="startDate" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">تاريخ الانتهاء</label>
+                    <input type="datetime-local" id="endDate" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none text-sm">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="addTask()" class="w-full bg-green-600 text-white py-2 rounded-lg font-bold hover:bg-green-700 transition">إضافة المهمة</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="p-6 overflow-x-auto">
+            <table class="w-full text-right" id="tasksTable">
+                <thead>
+                    <tr class="bg-gray-100 text-gray-700">
+                        <th class="p-4 border">المادة</th>
+                        <th class="p-4 border">الوصف</th>
+                        <th class="p-4 border">الوقت (البدء - الانتهاء)</th>
+                        <th class="p-4 border no-print">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="taskList">
+                    <!-- Tasks will appear here -->
+                </tbody>
+            </table>
+            <div id="emptyState" class="text-center py-10 text-gray-500">
+                لا توجد مهام مضافة حالياً. ابدأ بإضافة مهمتك الأولى!
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal (Hidden by default) -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white p-6 rounded-xl w-full max-w-md mx-4">
+            <h2 class="text-xl font-bold mb-4">تعديل المهمة</h2>
+            <div class="space-y-4">
+                <input type="text" id="editSubject" class="w-full p-2 border rounded">
+                <input type="text" id="editDescription" class="w-full p-2 border rounded">
+                <input type="datetime-local" id="editStart" class="w-full p-2 border rounded">
+                <input type="datetime-local" id="editEnd" class="w-full p-2 border rounded">
+                <div class="flex gap-2">
+                    <button onclick="saveEdit()" class="bg-blue-600 text-white px-4 py-2 rounded flex-1">حفظ</button>
+                    <button onclick="closeEditModal()" class="bg-gray-300 px-4 py-2 rounded flex-1">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تحميل المهام من التخزين المحلي عند بدء التطبيق
+        let tasks = JSON.parse(localStorage.getItem('my_tasks_data')) || [];
+        let editingId = null;
+
+        // استدعاء الوظيفة لعرض المهام المحفوظة فوراً
+        window.onload = function() {
+            renderTasks();
+        };
+
+        function saveToLocalStorage() {
+            localStorage.setItem('my_tasks_data', JSON.stringify(tasks));
+        }
+
+        function addTask() {
+            const subject = document.getElementById('subject').value;
+            const description = document.getElementById('description').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!subject || !description || !startDate || !endDate) {
+                alert('يرجى ملء جميع الحقول');
+                return;
+            }
+
+            const task = {
+                id: Date.now(),
+                subject,
+                description,
+                startDate,
+                endDate,
+                completed: false
+            };
+
+            tasks.push(task);
+            saveToLocalStorage();
+            renderTasks();
+            clearInputs();
+        }
+
+        function clearInputs() {
+            document.getElementById('subject').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+        }
+
+        function toggleComplete(id) {
+            tasks = tasks.map(task => 
+                task.id === id ? { ...task, completed: !task.completed } : task
+            );
+            saveToLocalStorage();
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            // استخدام Modal مخصص أو Confirm
+            if (confirm('هل أنت متأكد من حذف هذه المهمة؟')) {
+                tasks = tasks.filter(task => task.id !== id);
+                saveToLocalStorage();
+                renderTasks();
+            }
+        }
+
+        function openEditModal(id) {
+            const task = tasks.find(t => t.id === id);
+            editingId = id;
+            document.getElementById('editSubject').value = task.subject;
+            document.getElementById('editDescription').value = task.description;
+            document.getElementById('editStart').value = task.startDate;
+            document.getElementById('editEnd').value = task.endDate;
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            editingId = null;
+        }
+
+        function saveEdit() {
+            tasks = tasks.map(task => {
+                if (task.id === editingId) {
+                    return {
+                        ...task,
+                        subject: document.getElementById('editSubject').value,
+                        description: document.getElementById('editDescription').value,
+                        startDate: document.getElementById('editStart').value,
+                        endDate: document.getElementById('editEnd').value
+                    };
+                }
+                return task;
+            });
+            saveToLocalStorage();
+            closeEditModal();
+            renderTasks();
+        }
+
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return "-";
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('ar-EG', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('taskList');
+            const emptyState = document.getElementById('emptyState');
+            list.innerHTML = '';
+
+            if (tasks.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            tasks.forEach(task => {
+                const tr = document.createElement('tr');
+                tr.className = `transition hover:bg-gray-50 ${task.completed ? 'task-completed' : ''}`;
+                
+                tr.innerHTML = `
+                    <td class="p-4 border font-medium">${task.subject}</td>
+                    <td class="p-4 border text-gray-600">${task.description}</td>
+                    <td class="p-4 border text-sm">
+                        <div class="text-blue-600 font-bold">من: ${formatDateTime(task.startDate)}</div>
+                        <div class="text-red-600 font-bold">إلى: ${formatDateTime(task.endDate)}</div>
+                    </td>
+                    <td class="p-4 border no-print">
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="toggleComplete(${task.id})" class="${task.completed ? 'bg-orange-500' : 'bg-blue-500'} text-white px-3 py-1 rounded text-xs transition hover:opacity-80">
+                                ${task.completed ? 'إلغاء الإكمال' : 'تمت المهمة'}
+                            </button>
+                            <button onclick="openEditModal(${task.id})" class="bg-gray-500 text-white px-3 py-1 rounded text-xs transition hover:opacity-80">تعديل</button>
+                            <button onclick="deleteTask(${task.id})" class="bg-red-500 text-white px-3 py-1 rounded text-xs transition hover:opacity-80">حذف</button>
+                        </div>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
